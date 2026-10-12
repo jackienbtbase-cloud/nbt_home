@@ -1,40 +1,315 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" style="scroll-behavior: smooth;">
 <head>
     <meta charset="UTF-8">
-    <title>Company Internal Links Hub</title>
+    <title>NBT-Home Links</title>
+    <link rel="icon" type="image/png" href="NBT.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; background: #f4f7f6; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        input, button { padding: 10px; margin: 5px 0; border: 1px solid #ccc; border-radius: 4px; }
-        button { background: #28a745; color: white; border: none; cursor: pointer; }
-        button.delete-btn { background: #dc3545; padding: 5px 10px; font-size: 12px; }
-        .link-item { border-bottom: 1px solid #eee; padding: 15px 0; display: flex; justify-content: space-between; align-items: center; }
-        .link-info h3 { margin: 0 0 5px 0; }
-        .link-info a { color: #007bff; text-decoration: none; }
-        .meta-data { font-size: 12px; color: #666; margin-top: 5px; }
-        #searchBox { width: 100%; box-sizing: border-box; font-size: 16px; padding: 12px; border: 2px solid #007bff; }
+        /* 深蓝色系与全局基础重置 */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background: #f1f5f9; 
+            display: flex; 
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 左侧固定的侧边栏 (深蓝色) */
+        .sidebar {
+            width: 270px;
+            background: #0f172a; 
+            color: #f8fafc;
+            height: 100vh;
+            padding: 25px 20px;
+            box-sizing: border-box;
+            position: fixed;
+            left: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        .sidebar-top { overflow-y: auto; flex-grow: 1; padding-right: 2px; }
+        .sidebar h2 { font-size: 17px; margin-top: 0; margin-bottom: 25px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
+        .categories-title { font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin-bottom: 12px; font-weight: bold; }
+        
+        /* 侧边栏分组行样式 */
+        .sidebar-group-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .sidebar-group-item:hover {
+            background: #1e293b;
+        }
+        .sidebar-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 10px 12px;
+            font-size: 14px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .sidebar-group-item:hover .sidebar-link {
+            color: #ffffff;
+        }
+        .sidebar-link .badge {
+            background: #1e293b;
+            color: #cbd5e1;
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
+        }
+        .sidebar-group-item:hover .badge { background: #334155; color: white; }
+        
+        /* 删除组按钮 */
+        .btn-delete-group {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            font-size: 13px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .btn-delete-group:hover {
+            color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        /* 左侧底部的 Add Group 按钮样式 */
+        .sidebar-bottom {
+            padding-top: 15px;
+            border-top: 1px solid #1e293b;
+        }
+        .btn-add-group {
+            width: 100%;
+            background: #1e293b;
+            color: #f8fafc;
+            border: 1px dashed #475569;
+            padding: 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+        .btn-add-group:hover {
+            background: #334155;
+            border-color: #64748b;
+            color: #ffffff;
+        }
+
+        /* 右侧主要内容区 */
+        .main-content {
+            flex-grow: 1;
+            margin-left: 270px; 
+            padding: 30px 40px;
+            height: 100vh;
+            overflow-y: auto;
+            box-sizing: border-box;
+        }
+
+        /* 顶部操作栏 */
+        .top-bar { 
+            display: flex; gap: 15px; margin-bottom: 30px; align-items: center; 
+            background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+        #searchBox { flex-grow: 1; font-size: 15px; padding: 10px 15px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        #searchBox:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
+        
+        button { border: none; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .btn-primary { background: #2563eb; color: white; padding: 10px 20px; font-size: 15px; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-success { background: #10b981; color: white; width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; }
+        
+        /* 表格操作按钮 */
+        .btn-action { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 6px; border-radius: 4px; transition: background 0.2s; }
+        .btn-action:hover { background: #e2e8f0; }
+        .btn-toggle-info { background: #f8fafc; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; padding: 5px 10px; border-radius: 4px; }
+        .btn-toggle-info:hover { background: #f1f5f9; }
+
+        /* 分类标题与表格区域 (使用内阴影高亮，避免改变布局引起抖动) */
+        .category-section { margin-bottom: 40px; scroll-margin-top: 20px; border-radius: 8px; transition: background 0.2s; }
+        .category-section.drag-over-section { background: #e0f2fe; box-shadow: inset 0 0 0 2px #2563eb; }
+
+        .category-title-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .category-indicator {
+            width: 4px;
+            height: 20px;
+            background: #2563eb;
+            border-radius: 2px;
+        }
+        .category-title { 
+            font-size: 18px; color: #0f172a; font-weight: bold; margin: 0;
+        }
+
+        /* 表格样式 */
+        table { 
+            width: 100%; border-collapse: collapse; background: white; 
+            border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        th { 
+            background: #1e293b; 
+            color: white; 
+            padding: 12px 20px; 
+            text-align: left; 
+            font-size: 13px; 
+            font-weight: 500; 
+        }
+        td { 
+            padding: 14px 20px; 
+            border-bottom: 1px solid #e2e8f0; 
+            vertical-align: middle; 
+            font-size: 14px; 
+        }
+        
+        /* 拖拽行的交互样式 */
+        .drag-row { cursor: grab; user-select: none; }
+        .drag-row:active { cursor: grabbing; }
+        .drag-row:hover { background-color: #f8fafc; }
+        .drag-row.important { background-color: #fffbeb; } 
+        .drag-row.important:hover { background-color: #fef3c7; }
+        
+        .drag-row.dragging { opacity: 0.5; background-color: #f1f5f9; }
+
+        /* 表格内的内容样式 */
+        .drag-handle { color: #94a3b8; margin-right: 10px; font-weight: bold; }
+        .sys-title { font-size: 14px; color: #1e293b; text-decoration: none; font-weight: 600; }
+        .sys-title:hover { color: #2563eb; text-decoration: underline; }
+        .category-tag { background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 11px; padding: 3px 10px; border-radius: 12px; font-weight: 500; display: inline-block; }
+        .td-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
+        .hidden-info { display: none; background: #fff3cd; padding: 10px; border-radius: 6px; font-size: 13px; margin-top: 8px; border: 1px solid #ffeeba; color: #856404; word-break: break-all; }
+
+        /* 弹窗样式 */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
+        .modal-content { background-color: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
+        .modal-content input { width: 100%; box-sizing: border-box; padding: 12px; margin: 8px 0 20px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; }
+        .modal-content input:focus { border-color: #2563eb; outline: none; }
+        .close-btn { position: absolute; right: 20px; top: 20px; font-size: 24px; color: #94a3b8; cursor: pointer; line-height: 1; }
+        .close-btn:hover { color: #ef4444; }
+        .form-label { font-size: 13px; font-weight: bold; color: #475569; }
+        .drag-hint { font-size: 13px; color: #64748b; margin-bottom: 0; font-style: italic; }
     </style>
 </head>
 <body>
 
-    <h2>🔗 NBT Company System / Link Directory</h2>
-
-    <div class="card">
-        <input type="text" id="searchBox" placeholder="🔍 Type a name to search..." oninput="filterLinks()">
+    <!-- 左侧固定菜单栏 (深蓝色 Group 表格，保持固定不动) -->
+    <div class="sidebar">
+        <div class="sidebar-top">
+            <h2>🔗 NBT-Link Directory</h2>
+            <div class="categories-title">Groups</div>
+            <div id="sidebarMenu">
+                <!-- 菜单将根据分类自动生成 -->
+                <p style="color: #64748b; font-size: 13px;">Loading...</p>
+            </div>
+        </div>
+        
+        <div class="sidebar-bottom">
+            <button class="btn-add-group" onclick="openModal('groupModal')">
+                <span>+ Add Group</span>
+            </button>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>➕ Add New Link</h3>
-        <input type="text" id="linkName" placeholder="System Name (e.g., HR Portal)" required>
-        <input type="url" id="linkUrl" placeholder="https://..." required>
-        <input type="text" id="userName" placeholder="Your Name (to track who added this)" required>
-        <button onclick="addLink()">Add Link</button>
+    <!-- 右侧主要内容 (拖拽时将鼠标移到顶部或底部边缘即可自动上下滚动) -->
+    <div class="main-content" id="mainContentArea">
+        <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 5px;">NBT Links Directory</h2>
+        <div class="drag-hint">Tip: Drag any row near the top or bottom edge of the screen while dragging to auto-scroll smoothly!</div>
+        <br>
+
+        <div class="top-bar">
+            <input type="text" id="searchBox" placeholder="🔍 Search systems or tags..." oninput="filterLinks()">
+            <button class="btn-primary" onclick="openModal('addModal')">+ Add New Link</button>
+        </div>
+
+        <div id="linksContainer">
+            <p style="color: #64748b;">Loading data...</p>
+        </div>
     </div>
 
-    <div class="card" id="linksContainer">
-        <p>Loading...</p>
+    <!-- 弹窗：添加分组 (Add Group) -->
+    <div id="groupModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('groupModal')">&times;</span>
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #0f172a;">+ Add New Group</h3>
+            
+            <label class="form-label">Group Name *</label>
+            <input type="text" id="newGroupName" placeholder="e.g., Calculators, Dashboards, Systems" required>
+            
+            <button class="btn-success" onclick="addGroup()">Create Group</button>
+        </div>
+    </div>
+
+    <!-- 弹窗：添加链接 -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('addModal')">&times;</span>
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #2563eb;">+ Add New Link</h3>
+            
+            <label class="form-label">System Name *</label>
+            <input type="text" id="linkName" placeholder="e.g., HR Portal" required>
+            
+            <label class="form-label">URL / Website Link *</label>
+            <input type="url" id="linkUrl" placeholder="https://..." required>
+            
+            <label class="form-label">Department / Tag (Optional)</label>
+            <input type="text" id="linkCategory" placeholder="e.g., Emulsion, HR, Logistics">
+            
+            <label class="form-label">Login Info / Remarks (Hidden by default)</label>
+            <input type="text" id="loginInfo" placeholder="e.g., [shiuank:123456]">
+            
+            <label class="form-label">Added by *</label>
+            <input type="text" id="userName" placeholder="Your Name" required>
+            
+            <button class="btn-success" onclick="addLink()">Save Link</button>
+        </div>
+    </div>
+
+    <!-- 弹窗：编辑链接 -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
+            <h3 style="margin-top: 0; margin-bottom: 20px; color: #2563eb;">Edit Link</h3>
+            
+            <input type="hidden" id="editLinkId">
+
+            <label class="form-label">System Name *</label>
+            <input type="text" id="editLinkName" required>
+            
+            <label class="form-label">URL / Website Link *</label>
+            <input type="url" id="editLinkUrl" required>
+            
+            <label class="form-label">Department / Tag</label>
+            <input type="text" id="editLinkCategory">
+            
+            <label class="form-label">Update Login Info (Leave blank if no change)</label>
+            <input type="text" id="editLoginInfo" placeholder="Enter new details to overwrite">
+            
+            <button class="btn-success" onclick="saveEditedLink()">Update Link</button>
+        </div>
     </div>
 
     <script>
@@ -43,12 +318,28 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let allLinks = [];
+        let customGroups = JSON.parse(localStorage.getItem('nbt_custom_groups')) || ['Calculators', 'Dashboards', 'Core Systems'];
+        let linkGroupMap = JSON.parse(localStorage.getItem('nbt_link_group_map')) || {};
+
+        let draggedCardId = null;
+        let scrollInterval = null;
+
+        function openModal(modalId) { document.getElementById(modalId).style.display = 'flex'; }
+        function closeModal(modalId) { document.getElementById(modalId).style.display = 'none'; }
+        
+        window.onclick = function(event) {
+            if (event.target == document.getElementById('addModal')) closeModal('addModal');
+            if (event.target == document.getElementById('editModal')) closeModal('editModal');
+            if (event.target == document.getElementById('groupModal')) closeModal('groupModal');
+        }
 
         async function fetchLinks() {
             const { data, error } = await supabaseClient
                 .from('company_links')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .select('id, name, url, category, created_by, created_at, priority, sort_order') 
+                .order('priority', { ascending: false })
+                .order('sort_order', { ascending: true, nullsFirst: false })
+                .order('name', { ascending: true });
 
             if (error) {
                 console.error("Fetch error:", error);
@@ -59,76 +350,439 @@
             renderLinks(allLinks);
         }
 
+        // 渲染页面与左侧导航
         function renderLinks(links) {
             const container = document.getElementById('linksContainer');
+            const sidebar = document.getElementById('sidebarMenu');
             container.innerHTML = ''; 
+            sidebar.innerHTML = '';
 
-            if (links.length === 0) {
-                container.innerHTML = '<p>No data available yet.</p>';
+            const groupMap = {};
+            customGroups.forEach(g => { groupMap[g] = []; });
+            groupMap['Unassigned'] = [];
+
+            links.forEach(link => {
+                const assignedGroup = linkGroupMap[link.id];
+                const groupName = (assignedGroup && groupMap[assignedGroup]) ? assignedGroup : 'Unassigned';
+                groupMap[groupName].push(link);
+            });
+
+            const groupKeys = ['Unassigned', ...customGroups.filter(g => g !== 'Unassigned')];
+
+            groupKeys.forEach(groupName => {
+                const safeId = "group-" + groupName.replace(/\s+/g, '-').toLowerCase();
+                const itemsCount = groupMap[groupName].length;
+
+                let deleteGroupBtn = '';
+                if (groupName !== 'Unassigned') {
+                    deleteGroupBtn = `<button class="btn-delete-group" onclick="deleteGroup(event, '${groupName}')" title="Delete Group">🗑️</button>`;
+                }
+
+                sidebar.innerHTML += `
+                    <div class="sidebar-group-item">
+                        <a href="#${safeId}" class="sidebar-link">
+                            <span>📁 ${groupName}</span>
+                            <span class="badge">${itemsCount}</span>
+                        </a>
+                        ${deleteGroupBtn}
+                    </div>
+                `;
+
+                const section = document.createElement('div');
+                section.className = 'category-section';
+                section.id = safeId;
+                section.dataset.groupName = groupName;
+
+                section.addEventListener('dragover', handleDragOver);
+                section.addEventListener('dragleave', handleDragLeave);
+                section.addEventListener('drop', handleDrop);
+
+                section.innerHTML = `
+                    <div class="category-title-wrap">
+                        <div class="category-indicator"></div>
+                        <h3 class="category-title">${groupName}</h3>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width: 38%;">System Name</th>
+                                <th style="width: 24%;">Department / Tag</th>
+                                <th style="width: 22%;">Details</th>
+                                <th style="width: 16%; text-align: right;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                `;
+                
+                const tbody = section.querySelector('tbody');
+
+                if (itemsCount === 0) {
+                    const emptyTr = document.createElement('tr');
+                    emptyTr.innerHTML = `<td colspan="4" style="text-align: center; color: #94a3b8; font-style: italic; padding: 20px;">Drag links here to add them to ${groupName}.</td>`;
+                    tbody.appendChild(emptyTr);
+                } else {
+                    groupMap[groupName].forEach(link => {
+                        const isImportant = link.priority > 0;
+                        const tr = document.createElement('tr');
+                        tr.className = isImportant ? 'drag-row important' : 'drag-row';
+                        tr.setAttribute('draggable', 'true');
+                        tr.dataset.id = link.id;
+
+                        tr.addEventListener('dragstart', handleDragStart);
+                        tr.addEventListener('dragend', handleDragEnd);
+
+                        tr.innerHTML = `
+                            <td>
+                                <span class="drag-handle">☰</span>
+                                <a href="${link.url}" target="_blank" class="sys-title">${link.name}</a>
+                                <span style="font-size:12px; color:#2563eb; margin-left:6px;">↗</span>
+                            </td>
+                            <td>
+                                <span class="category-tag">${link.category || 'General'}</span>
+                            </td>
+                            <td>
+                                <button class="btn-toggle-info" onclick="fetchAndShowInfo('${link.id}')">Show Info / Login</button>
+                                <div id="info-${link.id}" class="hidden-info"></div>
+                            </td>
+                            <td class="td-actions">
+                                <button class="btn-action" title="${isImportant ? 'Unpin' : 'Pin'}" onclick="toggleImportant('${link.id}', ${link.priority})">
+                                    ${isImportant ? '📌' : '📍'}
+                                </button>
+                                <button class="btn-action" title="Edit" onclick="openEditForm('${link.id}')">✏️</button>
+                                <button class="btn-action" title="Delete" onclick="deleteLink('${link.id}')">🗑️</button>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+
+                container.appendChild(section);
+            });
+        }
+
+        // 新增分组
+        function addGroup() {
+            const groupName = document.getElementById('newGroupName').value.trim();
+            if (!groupName) {
+                alert("Please enter a group name!");
+                return;
+            }
+            if (!customGroups.includes(groupName)) {
+                customGroups.push(groupName);
+                localStorage.setItem('nbt_custom_groups', JSON.stringify(customGroups));
+            }
+            document.getElementById('newGroupName').value = '';
+            closeModal('groupModal');
+            renderLinks(allLinks);
+        }
+
+        // 删除分组
+        function deleteGroup(event, groupName) {
+            event.stopPropagation();
+            if (!confirm(`Are you sure you want to delete group "${groupName}"? Links inside this group will be moved back to Unassigned.`)) {
                 return;
             }
 
-            links.forEach(link => {
-                const date = new Date(link.created_at).toLocaleString('en-US');
-                const div = document.createElement('div');
-                div.className = 'link-item';
-                div.innerHTML = `
-                    <div class="link-info">
-                        <h3>${link.name}</h3>
-                        <a href="${link.url}" target="_blank">${link.url}</a>
-                        <div class="meta-data">👤 Added by: <b>${link.created_by}</b> | 🕒 Time: ${date}</div>
-                    </div>
-                    <button class="delete-btn" onclick="deleteLink('${link.id}')">Delete</button>
-                `;
-                container.appendChild(div);
+            customGroups = customGroups.filter(g => g !== groupName);
+            localStorage.setItem('nbt_custom_groups', JSON.stringify(customGroups));
+
+            for (let id in linkGroupMap) {
+                if (linkGroupMap[id] === groupName) {
+                    delete linkGroupMap[id];
+                }
+            }
+            localStorage.setItem('nbt_link_group_map', JSON.stringify(linkGroupMap));
+
+            renderLinks(allLinks);
+        }
+
+        // 拖拽相关事件处理（含边缘平滑自动滚动 Auto-scroll）
+        function handleDragStart(e) {
+            draggedCardId = this.dataset.id;
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        const mainContentArea = document.getElementById('mainContentArea');
+
+        function clearScrollInterval() {
+            if (scrollInterval) {
+                clearInterval(scrollInterval);
+                scrollInterval = null;
+            }
+        }
+
+        mainContentArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+
+            const section = e.target.closest('.category-section');
+            document.querySelectorAll('.category-section').forEach(sec => {
+                sec.classList.remove('drag-over-section');
             });
+            if (section) {
+                section.classList.add('drag-over-section');
+            }
+
+            // 边缘自动滚动逻辑
+            const rect = mainContentArea.getBoundingClientRect();
+            const mouseY = e.clientY;
+            const threshold = 90; // 距离上下边缘90px时触发滚动
+
+            if (mouseY - rect.top < threshold) {
+                // 向上滚动
+                if (!scrollInterval) {
+                    scrollInterval = setInterval(() => {
+                        mainContentArea.scrollTop -= 20;
+                    }, 20);
+                }
+            } else if (rect.bottom - mouseY < threshold) {
+                // 向下滚动
+                if (!scrollInterval) {
+                    scrollInterval = setInterval(() => {
+                        mainContentArea.scrollTop += 20;
+                    }, 20);
+                }
+            } else {
+                clearScrollInterval();
+            }
+        });
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDragLeave(e) {
+            const section = e.target.closest('.category-section');
+            if (section) {
+                section.classList.remove('drag-over-section');
+            }
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            clearScrollInterval();
+            const section = e.target.closest('.category-section');
+            if (!section) return;
+            section.classList.remove('drag-over-section');
+
+            const targetGroup = section.dataset.groupName;
+            const draggedIndex = allLinks.findIndex(l => l.id === draggedCardId);
+            if (draggedIndex < 0) return;
+
+            if (targetGroup === 'Unassigned') {
+                delete linkGroupMap[draggedCardId];
+            } else {
+                linkGroupMap[draggedCardId] = targetGroup;
+            }
+            localStorage.setItem('nbt_link_group_map', JSON.stringify(linkGroupMap));
+
+            const targetRow = e.target.closest('.drag-row');
+            const [movedItem] = allLinks.splice(draggedIndex, 1);
+            
+            if (targetRow && targetRow.dataset.id !== draggedCardId) {
+                const targetIndex = allLinks.findIndex(l => l.id === targetRow.dataset.id);
+                if (targetIndex >= 0) {
+                    allLinks.splice(targetIndex, 0, movedItem);
+                } else {
+                    allLinks.push(movedItem);
+                }
+            } else {
+                allLinks.push(movedItem);
+            }
+
+            renderLinks(allLinks);
+            await saveNewOrderToDatabase();
+        }
+
+        function handleDragEnd() {
+            clearScrollInterval();
+            draggedCardId = null;
+            document.querySelectorAll('.drag-row').forEach(row => {
+                row.classList.remove('dragging');
+            });
+            document.querySelectorAll('.category-section').forEach(sec => {
+                sec.classList.remove('drag-over-section');
+            });
+        }
+
+        async function saveNewOrderToDatabase() {
+            for (let i = 0; i < allLinks.length; i++) {
+                const linkId = allLinks[i].id;
+                await supabaseClient
+                    .from('company_links')
+                    .update({ sort_order: i + 1 })
+                    .eq('id', linkId);
+            }
         }
 
         function filterLinks() {
             const keyword = document.getElementById('searchBox').value.toLowerCase();
             const filtered = allLinks.filter(link => 
-                link.name.toLowerCase().includes(keyword)
+                link.name.toLowerCase().includes(keyword) || 
+                (link.category && link.category.toLowerCase().includes(keyword))
             );
             renderLinks(filtered);
+        }
+
+        async function fetchAndShowInfo(linkId) {
+            const infoDiv = document.getElementById(`info-${linkId}`);
+            if (infoDiv.style.display === 'block') {
+                infoDiv.style.display = 'none';
+                return;
+            }
+
+            const pass = prompt("Enter Password Please");
+            if (pass !== "ilovenbt") { 
+                alert("Password Incorrect!");
+                return;
+            }
+
+            infoDiv.style.display = 'block';
+            infoDiv.innerHTML = '<span style="color:#6c757d;">Fetching data...</span>';
+
+            const { data, error } = await supabaseClient
+                .from('link_secrets')
+                .select('login_info')
+                .eq('link_id', linkId)
+                .single();
+
+            if (error || !data) {
+                infoDiv.innerHTML = 'No login info found or fetch failed.';
+            } else {
+                infoDiv.innerHTML = data.login_info;
+            }
         }
 
         async function addLink() {
             const name = document.getElementById('linkName').value.trim();
             const url = document.getElementById('linkUrl').value.trim();
+            const category = document.getElementById('linkCategory').value.trim() || 'General';
+            const loginInfo = document.getElementById('loginInfo').value.trim();
             const user = document.getElementById('userName').value.trim();
+            
+            const newSortOrder = 1;
 
             if (!name || !url || !user) {
-                alert("Please fill in all fields!");
+                alert("Please fill in System Name, URL and Your Name!");
                 return;
             }
 
-            const { data, error } = await supabaseClient
-                .from('company_links')
-                .insert([{ name: name, url: url, created_by: user }]);
+            for (let link of allLinks) {
+                await supabaseClient
+                    .from('company_links')
+                    .update({ sort_order: (link.sort_order || 0) + 1 })
+                    .eq('id', link.id);
+            }
 
+            const { data: linkData, error: linkError } = await supabaseClient
+                .from('company_links')
+                .insert([{ name: name, url: url, created_by: user, priority: 0, category: category, sort_order: newSortOrder }])
+                .select(); 
+
+            if (linkError) {
+                alert("Failed to add link: " + linkError.message);
+                return;
+            }
+
+            if (loginInfo && linkData && linkData.length > 0) {
+                const newLinkId = linkData[0].id;
+                await supabaseClient.from('link_secrets').insert([{ link_id: newLinkId, login_info: loginInfo }]);
+            }
+
+            document.getElementById('linkName').value = '';
+            document.getElementById('linkUrl').value = '';
+            document.getElementById('linkCategory').value = '';
+            document.getElementById('loginInfo').value = '';
+            document.getElementById('userName').value = '';
+            closeModal('addModal');
+            fetchLinks(); 
+        }
+
+        async function openEditForm(id) {
+            const link = allLinks.find(l => l.id === id);
+            if (!link) return;
+
+            document.getElementById('editLinkId').value = link.id;
+            document.getElementById('editLinkName').value = link.name;
+            document.getElementById('editLinkUrl').value = link.url;
+            document.getElementById('editLinkCategory').value = link.category || '';
+            document.getElementById('editLoginInfo').value = '';
+
+            openModal('editModal');
+        }
+
+        async function saveEditedLink() {
+            const id = document.getElementById('editLinkId').value;
+            const name = document.getElementById('editLinkName').value.trim();
+            const url = document.getElementById('editLinkUrl').value.trim();
+            const category = document.getElementById('editLinkCategory').value.trim();
+            const newLoginInfo = document.getElementById('editLoginInfo').value.trim();
+
+            if (!name || !url) {
+                alert("Name and URL cannot be empty!");
+                return;
+            }
+
+            const { error: linkError } = await supabaseClient
+                .from('company_links')
+                .update({ name: name, url: url, category: category })
+                .eq('id', id);
+
+            if (linkError) {
+                alert("Failed to update link: " + linkError.message);
+                return;
+            }
+
+            if (newLoginInfo !== '') {
+                const { data: existingSecret } = await supabaseClient
+                    .from('link_secrets')
+                    .select('id')
+                    .eq('link_id', id)
+                    .single();
+
+                if (existingSecret) {
+                    await supabaseClient.from('link_secrets').update({ login_info: newLoginInfo }).eq('link_id', id);
+                } else {
+                    await supabaseClient.from('link_secrets').insert([{ link_id: id, login_info: newLoginInfo }]);
+                }
+            }
+
+            closeModal('editModal');
+            fetchLinks();
+        }
+
+        async function toggleImportant(id, currentPriority) {
+            const newPriority = currentPriority > 0 ? 0 : 10;
+            
+            const item = allLinks.find(l => l.id === id);
+            if (item) {
+                item.priority = newPriority;
+                allLinks.sort((a, b) => {
+                    if (b.priority !== a.priority) return b.priority - a.priority;
+                    return (a.sort_order || 0) - (b.sort_order || 0);
+                });
+                renderLinks(allLinks);
+            }
+
+            const { error } = await supabaseClient.from('company_links').update({ priority: newPriority }).eq('id', id);
             if (error) {
-                alert("Failed to add: " + error.message);
-            } else {
-                document.getElementById('linkName').value = '';
-                document.getElementById('linkUrl').value = '';
-                document.getElementById('userName').value = '';
+                alert("Failed to update: " + error.message);
                 fetchLinks(); 
             }
         }
 
         async function deleteLink(id) {
-            if (!confirm("Are you sure you want to delete this link?")) return;
-
-            const { error } = await supabaseClient
-                .from('company_links')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                alert("Failed to delete: " + error.message);
-            } else {
-                fetchLinks(); 
+            const pass = prompt("Delete requires admin password:");
+            if (pass !== "ilovenbt") { 
+                alert("Action Cancelled / Password Incorrect.");
+                return;
             }
+            if (!confirm("Are you sure you want to delete this link?")) return;
+            const { error } = await supabaseClient.from('company_links').delete().eq('id', id);
+            if (error) alert("Failed to delete: " + error.message);
+            else fetchLinks(); 
         }
 
         window.onload = fetchLinks;
