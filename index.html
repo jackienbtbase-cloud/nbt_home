@@ -319,7 +319,6 @@
 
         let allLinks = [];
         let customGroups = JSON.parse(localStorage.getItem('nbt_custom_groups')) || ['Calculators', 'Dashboards', 'Core Systems'];
-        let linkGroupMap = JSON.parse(localStorage.getItem('nbt_link_group_map')) || {};
 
         let draggedCardId = null;
         let scrollInterval = null;
@@ -336,7 +335,7 @@
         async function fetchLinks() {
             const { data, error } = await supabaseClient
                 .from('company_links')
-                .select('id, name, url, category, created_by, created_at, priority, sort_order') 
+                .select('id, name, url, category, created_by, created_at, priority, sort_order,group_name') 
                 .order('priority', { ascending: false })
                 .order('sort_order', { ascending: true, nullsFirst: false })
                 .order('name', { ascending: true });
@@ -361,12 +360,18 @@
             customGroups.forEach(g => { groupMap[g] = []; });
             groupMap['Unassigned'] = [];
 
-            links.forEach(link => {
-                const assignedGroup = linkGroupMap[link.id];
-                const groupName = (assignedGroup && groupMap[assignedGroup]) ? assignedGroup : 'Unassigned';
+           links.forEach(link => {
+                const assignedGroup = link.group_name;
+                const groupName = (assignedGroup && groupMap[assignedGroup] !== undefined) ? assignedGroup : 'Unassigned';
+                
+                if (assignedGroup && !groupMap[assignedGroup] && assignedGroup !== 'Unassigned') {
+                    groupMap[assignedGroup] = [];
+                    customGroups.push(assignedGroup);
+                    localStorage.setItem('nbt_custom_groups', JSON.stringify(customGroups));
+                }
+                
                 groupMap[groupName].push(link);
             });
-
             const groupKeys = ['Unassigned', ...customGroups.filter(g => g !== 'Unassigned')];
 
             groupKeys.forEach(groupName => {
@@ -571,13 +576,21 @@
             const draggedIndex = allLinks.findIndex(l => l.id === draggedCardId);
             if (draggedIndex < 0) return;
 
-            if (targetGroup === 'Unassigned') {
-                delete linkGroupMap[draggedCardId];
-            } else {
-                linkGroupMap[draggedCardId] = targetGroup;
+            const newGroupName = targetGroup === 'Unassigned' ? null : targetGroup;
+            
+            const draggedIndex = allLinks.findIndex(l => l.id === draggedCardId);
+            if (draggedIndex >= 0) {
+                allLinks[draggedIndex].group_name = newGroupName;
             }
-            localStorage.setItem('nbt_link_group_map', JSON.stringify(linkGroupMap));
 
+            supabaseClient
+                .from('company_links')
+                .update({ group_name: newGroupName })
+                .eq('id', draggedCardId)
+                .then(({ error }) => {
+                    if (error) console.error("Failed to Store Data in Database:", error);
+                });
+            
             const targetRow = e.target.closest('.drag-row');
             const [movedItem] = allLinks.splice(draggedIndex, 1);
             
@@ -784,7 +797,17 @@
             if (error) alert("Failed to delete: " + error.message);
             else fetchLinks(); 
         }
-
+            supabaseClient
+                        .channel('public:company_links')
+                        .on(
+                            'postgres_changes',
+                            { event: '*', schema: 'public', table: 'company_links' },
+                            (payload) => {
+                                console.log('Refreshing...', payload);
+                                fetchLinks(); 
+                            }
+                        )
+                        .subscribe();
         window.onload = fetchLinks;
     </script>
 </body>
