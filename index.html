@@ -6,7 +6,7 @@
     <link rel="icon" type="image/png" href="NBT.png">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* 深蓝色系与全局基础重置 */
+        /* Dark blue theme and global base reset */
         body { 
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
             margin: 0; 
@@ -17,7 +17,7 @@
             overflow: hidden;
         }
 
-        /* 左侧固定的侧边栏 (深蓝色) */
+        /* Fixed left sidebar (Dark blue) */
         .sidebar {
             width: 270px;
             background: #0f172a; 
@@ -38,7 +38,7 @@
         .sidebar h2 { font-size: 17px; margin-top: 0; margin-bottom: 25px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
         .categories-title { font-size: 11px; text-transform: uppercase; color: #64748b; letter-spacing: 1px; margin-bottom: 12px; font-weight: bold; }
         
-        /* 侧边栏分组行样式 */
+        /* Sidebar group item styles */
         .sidebar-group-item {
             display: flex;
             align-items: center;
@@ -74,7 +74,7 @@
         }
         .sidebar-group-item:hover .badge { background: #334155; color: white; }
         
-        /* 删除组按钮 */
+        /* Delete group button */
         .btn-delete-group {
             background: transparent;
             border: none;
@@ -90,7 +90,7 @@
             background: rgba(239, 68, 68, 0.1);
         }
 
-        /* 左侧底部的 Add Group 按钮样式 */
+        /* Bottom left Add Group button style */
         .sidebar-bottom {
             padding-top: 15px;
             border-top: 1px solid #1e293b;
@@ -117,7 +117,7 @@
             color: #ffffff;
         }
 
-        /* 右侧主要内容区 */
+        /* Main content area on the right */
         .main-content {
             flex-grow: 1;
             margin-left: 270px; 
@@ -127,7 +127,7 @@
             box-sizing: border-box;
         }
 
-        /* 顶部操作栏 */
+        /* Top action bar */
         .top-bar { 
             display: flex; gap: 15px; margin-bottom: 30px; align-items: center; 
             background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 1px 5px rgba(0,0,0,0.05);
@@ -140,13 +140,13 @@
         .btn-primary:hover { background: #1d4ed8; }
         .btn-success { background: #10b981; color: white; width: 100%; padding: 12px; margin-top: 10px; font-size: 16px; }
         
-        /* 表格操作按钮 */
+        /* Table action buttons */
         .btn-action { background: transparent; border: none; cursor: pointer; font-size: 16px; padding: 6px; border-radius: 4px; transition: background 0.2s; }
         .btn-action:hover { background: #e2e8f0; }
         .btn-toggle-info { background: #f8fafc; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; padding: 5px 10px; border-radius: 4px; }
         .btn-toggle-info:hover { background: #f1f5f9; }
 
-        /* 分类标题与表格区域 (使用内阴影高亮，避免改变布局引起抖动) */
+        /* Category title and table area (using inner shadow highlight to avoid layout jitter) */
         .category-section { margin-bottom: 40px; scroll-margin-top: 20px; border-radius: 8px; transition: background 0.2s; }
         .category-section.drag-over-section { background: #e0f2fe; box-shadow: inset 0 0 0 2px #2563eb; }
 
@@ -166,7 +166,7 @@
             font-size: 18px; color: #0f172a; font-weight: bold; margin: 0;
         }
 
-        /* 表格样式 */
+        /* Table styles */
         table { 
             width: 100%; border-collapse: collapse; background: white; 
             border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
@@ -186,7 +186,7 @@
             font-size: 14px; 
         }
         
-        /* 拖拽行的交互样式 */
+        /* Drag and drop row interactive styles */
         .drag-row { cursor: grab; user-select: none; }
         .drag-row:active { cursor: grabbing; }
         .drag-row:hover { background-color: #f8fafc; }
@@ -195,7 +195,7 @@
         
         .drag-row.dragging { opacity: 0.5; background-color: #f1f5f9; }
 
-        /* 表格内的内容样式 */
+        /* Content styles within the table */
         .drag-handle { color: #94a3b8; margin-right: 10px; font-weight: bold; }
         .sys-title { font-size: 14px; color: #1e293b; text-decoration: none; font-weight: 600; }
         .sys-title:hover { color: #2563eb; text-decoration: underline; }
@@ -203,7 +203,7 @@
         .td-actions { display: flex; gap: 8px; justify-content: flex-end; align-items: center; }
         .hidden-info { display: none; background: #fff3cd; padding: 10px; border-radius: 6px; font-size: 13px; margin-top: 8px; border: 1px solid #ffeeba; color: #856404; word-break: break-all; }
 
-        /* 弹窗样式 */
+        /* Modal styles */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(3px); align-items: center; justify-content: center; }
         .modal-content { background-color: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 420px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); position: relative; }
         .modal-content input { width: 100%; box-sizing: border-box; padding: 12px; margin: 8px 0 20px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; background: white; }
@@ -216,13 +216,13 @@
 </head>
 <body>
 
-    <!-- 左侧固定菜单栏 (深蓝色 Group 表格，保持固定不动) -->
+    <!-- Fixed left menu bar (Dark blue Group table, remains fixed) -->
     <div class="sidebar">
         <div class="sidebar-top">
             <h2>🔗 NBT-Link Directory</h2>
             <div class="categories-title">Groups</div>
             <div id="sidebarMenu">
-                <!-- 菜单将根据分类自动生成 -->
+                <!-- Menus will be generated automatically based on categories -->
                 <p style="color: #64748b; font-size: 13px;">Loading...</p>
             </div>
         </div>
@@ -234,7 +234,7 @@
         </div>
     </div>
 
-    <!-- 右侧主要内容 (拖拽时将鼠标移到顶部或底部边缘即可自动上下滚动) -->
+    <!-- Main content on the right (Move mouse to top or bottom edge while dragging to auto-scroll) -->
     <div class="main-content" id="mainContentArea">
         <h2 style="color: #0f172a; margin-top: 0; margin-bottom: 5px;">NBT Links Directory</h2>
         <div class="drag-hint">Tip: Drag any row near the top or bottom edge of the screen while dragging to auto-scroll smoothly!</div>
@@ -250,7 +250,7 @@
         </div>
     </div>
 
-    <!-- 弹窗：添加分组 (Add Group) -->
+    <!-- Modal: Add Group -->
     <div id="groupModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('groupModal')">&times;</span>
@@ -263,7 +263,7 @@
         </div>
     </div>
 
-    <!-- 弹窗：添加链接 -->
+    <!-- Modal: Add Link -->
     <div id="addModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('addModal')">&times;</span>
@@ -288,7 +288,7 @@
         </div>
     </div>
 
-    <!-- 弹窗：编辑链接 -->
+    <!-- Modal: Edit Link -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close-btn" onclick="closeModal('editModal')">&times;</span>
@@ -349,7 +349,7 @@
             renderLinks(allLinks);
         }
 
-        // 渲染页面与左侧导航
+        // Render page and left navigation
         function renderLinks(links) {
             const container = document.getElementById('linksContainer');
             const sidebar = document.getElementById('sidebarMenu');
@@ -466,7 +466,7 @@
             });
         }
 
-        // 新增分组
+        // Add new group
         function addGroup() {
             const groupName = document.getElementById('newGroupName').value.trim();
             if (!groupName) {
@@ -482,7 +482,7 @@
             renderLinks(allLinks);
         }
 
-        // 删除分组
+        // Delete group
         function deleteGroup(event, groupName) {
             event.stopPropagation();
             if (!confirm(`Are you sure you want to delete group "${groupName}"? Links inside this group will be moved back to Unassigned.`)) {
@@ -502,7 +502,7 @@
             renderLinks(allLinks);
         }
 
-        // 拖拽相关事件处理（含边缘平滑自动滚动 Auto-scroll）
+        // Drag and drop event handling (including edge smooth auto-scroll)
         function handleDragStart(e) {
             draggedCardId = this.dataset.id;
             this.classList.add('dragging');
@@ -530,20 +530,20 @@
                 section.classList.add('drag-over-section');
             }
 
-            // 边缘自动滚动逻辑
+            // Edge auto-scroll logic
             const rect = mainContentArea.getBoundingClientRect();
             const mouseY = e.clientY;
-            const threshold = 90; // 距离上下边缘90px时触发滚动
+            const threshold = 90; // Trigger scroll when 90px from top/bottom edge
 
             if (mouseY - rect.top < threshold) {
-                // 向上滚动
+                // Scroll up
                 if (!scrollInterval) {
                     scrollInterval = setInterval(() => {
                         mainContentArea.scrollTop -= 20;
                     }, 20);
                 }
             } else if (rect.bottom - mouseY < threshold) {
-                // 向下滚动
+                // Scroll down
                 if (!scrollInterval) {
                     scrollInterval = setInterval(() => {
                         mainContentArea.scrollTop += 20;
