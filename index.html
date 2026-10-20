@@ -452,7 +452,7 @@
                             </td>
                             <td class="td-actions">
                                 <button class="btn-action" title="${isImportant ? 'Unpin' : 'Pin'}" onclick="toggleImportant('${link.id}', ${link.priority})">
-                                    ${isImportant ? '📌' : '📍'}
+                                    ${isImportant ? '📌' : '🔘'}
                                 </button>
                                 <button class="btn-action" title="Edit" onclick="openEditForm('${link.id}')">✏️</button>
                                 <button class="btn-action" title="Delete" onclick="deleteLink('${link.id}')">🗑️</button>
@@ -492,12 +492,8 @@
             customGroups = customGroups.filter(g => g !== groupName);
             localStorage.setItem('nbt_custom_groups', JSON.stringify(customGroups));
 
-            for (let id in linkGroupMap) {
-                if (linkGroupMap[id] === groupName) {
-                    delete linkGroupMap[id];
-                }
-            }
-            localStorage.setItem('nbt_link_group_map', JSON.stringify(linkGroupMap));
+            // Note: linkGroupMap variable was removed in a previous file version for server-side persistence, 
+            // so we skip the manual group map clearing here to avoid undefined errors.
 
             renderLinks(allLinks);
         }
@@ -768,8 +764,17 @@
             const newPriority = currentPriority > 0 ? 0 : 10;
             
             const item = allLinks.find(l => l.id === id);
+            let updateData = { priority: newPriority }; // Prepare update data for database
+            
             if (item) {
                 item.priority = newPriority;
+                
+                // [Core Fix]: If pinning (Priority 10), set sort order to 0 simultaneously
+                if (newPriority === 10) {
+                    item.sort_order = 0;
+                    updateData.sort_order = 0;
+                }
+                
                 allLinks.sort((a, b) => {
                     if (b.priority !== a.priority) return b.priority - a.priority;
                     return (a.sort_order || 0) - (b.sort_order || 0);
@@ -777,7 +782,8 @@
                 renderLinks(allLinks);
             }
 
-            const { error } = await supabaseClient.from('company_links').update({ priority: newPriority }).eq('id', id);
+            // Sync priority and new sort order to Supabase
+            const { error } = await supabaseClient.from('company_links').update(updateData).eq('id', id);
             if (error) {
                 alert("Failed to update: " + error.message);
                 fetchLinks(); 
@@ -795,17 +801,20 @@
             if (error) alert("Failed to delete: " + error.message);
             else fetchLinks(); 
         }
-            supabaseClient
-                        .channel('public:company_links')
-                        .on(
-                            'postgres_changes',
-                            { event: '*', schema: 'public', table: 'company_links' },
-                            (payload) => {
-                                console.log('Refreshing...', payload);
-                                fetchLinks(); 
-                            }
-                        )
-                        .subscribe();
+        
+        // Setup real-time listener
+        supabaseClient
+            .channel('public:company_links')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'company_links' },
+                (payload) => {
+                    console.log('Refreshing...', payload);
+                    fetchLinks(); 
+                }
+            )
+            .subscribe();
+            
         window.onload = fetchLinks;
     </script>
 </body>
