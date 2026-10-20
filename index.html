@@ -635,25 +635,23 @@
                 return;
             }
 
-            const pass = prompt("Enter Password Please");
-            if (pass !== "ilovenbt") { 
-                alert("Password Incorrect!");
-                return;
-            }
+            const pass = prompt("Enter Password Please:");
+            if (!pass) return; 
 
             infoDiv.style.display = 'block';
-            infoDiv.innerHTML = '<span style="color:#6c757d;">Fetching data...</span>';
+            infoDiv.innerHTML = '<span style="color:#6c757d;">Verifying...</span>';
 
-            const { data, error } = await supabaseClient
-                .from('link_secrets')
-                .select('login_info')
-                .eq('link_id', linkId)
-                .single();
+            const { data, error } = await supabaseClient.rpc('verify_and_get_secret', { 
+                link_id_param: linkId, 
+                provided_pass: pass 
+            });
 
-            if (error || !data) {
-                infoDiv.innerHTML = 'No login info found or fetch failed.';
+            if (error) {
+                infoDiv.innerHTML = '<span style="color:red;">Password Incorrect!</span>';
+            } else if (!data) {
+                infoDiv.innerHTML = '<span style="color:#856404;">No login info found.</span>';
             } else {
-                infoDiv.innerHTML = data.login_info;
+                infoDiv.innerHTML = data;
             }
         }
 
@@ -791,16 +789,22 @@
             }
         }
 
-        async function deleteLink(id) {
-            const pass = prompt("Delete requires admin password:");
-            if (pass !== "ilovenbt") { 
+           async function deleteLink(id) {
+                const pass = prompt("Delete requires admin password:");
+                if (!pass) return;
+    
+                if (!confirm("Are you sure you want to delete this link?")) return;
+    
+                const { error } = await supabaseClient.rpc('delete_link_securely', { 
+                    link_id_param: id, 
+                    provided_pass: pass 
+                });
+
+            if (error) {
                 alert("Action Cancelled / Password Incorrect.");
-                return;
+            } else {
+                fetchLinks(); 
             }
-            if (!confirm("Are you sure you want to delete this link?")) return;
-            const { error } = await supabaseClient.from('company_links').delete().eq('id', id);
-            if (error) alert("Failed to delete: " + error.message);
-            else fetchLinks(); 
         }
         
         supabaseClient
