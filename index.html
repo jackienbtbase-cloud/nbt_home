@@ -573,16 +573,14 @@
             section.classList.remove('drag-over-section');
 
             const targetGroup = section.dataset.groupName;
-            const draggedIndex = allLinks.findIndex(l => l.id === draggedCardId);
+            const draggedIndex = allLinks.findIndex(l => l.id === draggedCardId); 
             if (draggedIndex < 0) return;
-
+            
             const newGroupName = targetGroup === 'Unassigned' ? null : targetGroup;
             
-            const draggedIndex = allLinks.findIndex(l => l.id === draggedCardId);
             if (draggedIndex >= 0) {
                 allLinks[draggedIndex].group_name = newGroupName;
             }
-
             supabaseClient
                 .from('company_links')
                 .update({ group_name: newGroupName })
